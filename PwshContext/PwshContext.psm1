@@ -242,17 +242,19 @@ function Get-ExistingModule {
 
         if ($ModuleVersionExisting -eq $ModuleVersionNew) {
             $Path = ([System.IO.DirectoryInfo]$ExistingModule.Path).Parent.FullName
-            $DestinationPath = "$EnvironmentPath$Separator$($Module.Name)"
+            $ExistingModuleName = $ExistingModule.Name
+            $ExistingModuleVersion =$ExistingModule.Version
+            $DestinationPath = "$EnvironmentPath$Separator$ExistingModuleName$Separator$ExistingModuleVersion"
 
             if ($Move){
                 Write-Verbose "Creating destination path: '$DestinationPath'"
                 New-Directory -Path $DestinationPath -ErrorAction Stop | Out-Null
 
-                Write-Verbose "Moving module: $($Module.Name) $($Module.Version) to '$DestinationPath'."
+                Write-Verbose "Moving module: '$ExistingModuleName' - '$ExistingModuleVersion' to '$DestinationPath'."
                 Move-Item -LiteralPath $Path -Destination $DestinationPath -ErrorAction Stop #When Parent paths is empty delete that directory
             }
             else{
-                Write-Verbose "Copying module: $($Module.Name) $($Module.Version) to '$DestinationPath'."
+                Write-Verbose "Copying module: '$ExistingModuleName' - '$ExistingModuleVersion' to '$DestinationPath'."
                 Copy-Item -LiteralPath $Path -Destination $DestinationPath -Recurse -ErrorAction Stop
             }
             Write-Verbose "Returning: True"
@@ -343,11 +345,15 @@ function Install-PwshModule {
 
                     if ([string]::IsNullOrEmpty($ModuleInstall) -or $ModuleInstall.Version -ne $Version) {
                         $ModuleVersion = (Get-Module -Name $ModuleName -ListAvailable -Verbose:$false)[0].Version
-                        Write-Verbose "Module with version '$ModuleVersion' is already present and will be moved as you specified condition '$Condition'."
-                    }
+                        Write-Verbose "Module with version '$ModuleVersion' is already present and will be copied as you specified condition '$Condition'."
 
-                    Write-Verbose "Triggering function 'Get-ExistingModule' for moving module $ModuleName with version $ModuleVersion."
-                    Get-ExistingModule -Name $ModuleName -Version $ModuleVersion -EnvironmentPath $EnvironmentPath -Move -ErrorAction Stop | Out-Null
+                        Write-Verbose "Triggering function 'Get-ExistingModule' for copying module $ModuleName with version $ModuleVersion."
+                        Get-ExistingModule -Name $ModuleName -Version $ModuleVersion -EnvironmentPath $EnvironmentPath -ErrorAction Stop | Out-Null
+                    }
+                    else {
+                        Write-Verbose "Triggering function 'Get-ExistingModule' for moving module $ModuleName with version $ModuleVersion."
+                        Get-ExistingModule -Name $ModuleName -Version $ModuleVersion -EnvironmentPath $EnvironmentPath -Move -ErrorAction Stop | Out-Null
+                    }
                 }
             }
         }
@@ -386,6 +392,8 @@ function Set-PwshContext {
     [string]$PwshContextJsonPath = "$Path$($Separator)Context$($Separator)PwshContext_$Name.json"
     [string]$ModulesPath = "$Path$($Separator)Modules"
 
+    Write-Host "Preparing PowerShell context '$Name'. `nDepending on the configuration this may take a quick sip or a full coffee." -ForegroundColor Green
+
     Write-Verbose "Creating module directory: '$ModulesPath'"
     $EnvPath = New-Directory -Path $ModulesPath
 
@@ -421,7 +429,12 @@ function Set-PwshContext {
         Win32NT {
             Write-Verbose "Starting new pwsh session and closing this one."
             Start-Process -FilePath pwsh -WorkingDirectory $Path -ArgumentList { -NoExit -command "$Host.UI.RawUI.WindowTitle = 'PwshContext'" } -ErrorAction Stop
-            exit
+            if (-not $PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent){
+                exit
+            }
+            else {
+                Write-Verbose "Not closing this session as the function is started in verbose mode."
+            }
         }
         Unix {
             Write-Verbose "Starting new pwsh session and closing this one."
