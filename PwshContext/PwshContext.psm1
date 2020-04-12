@@ -486,7 +486,10 @@ function New-PwshContext {
 
     Write-Verbose "Creating array of unique modules. When duplicate the highest version is maintained."
     foreach ($LoadedModule in $LoadedModules) {
-        if (($LoadedModule.ModuleBase -inotmatch '^.*(PowerShell)(\\|\/)\d(-preview)?(.*)?$') -and ($LoadedModule.Name -inotmatch 'PwshContext')) {
+        Write-Verbose "Excluding module 'PwshContext' and 'posh-git'"
+        if (($LoadedModule.ModuleBase -inotmatch '^.*(PowerShell)(\\|\/)\d(-preview)?(.*)?$') -and
+            ($LoadedModule.Name -inotmatch 'PwshContext') -and
+            ($LoadedModule.Name -inotmatch 'posh-git')) {
             [Object[]]$ExistingModules += $LoadedModule
         }
     }
@@ -494,7 +497,7 @@ function New-PwshContext {
     [array]$Modules = @()
 
     foreach ($ExistingModule in $ExistingModules) {
-        $PathElements = $ExistingModule.Split($Separator)
+        $PathElements = $ExistingModule.ModuleBase.Split($Separator)
 
         if($PathElements[-1] -imatch '^(\d+)(\.\d+){2,3}$'){
             [string]$Name = $PathElements[-2]
@@ -541,4 +544,6 @@ function New-PwshContext {
 
     Write-Verbose "Saving PowerShell context settings: '$PwshContextSettingsFilePath'"
     $PwshContextSettingsJson | Out-File -LiteralPath $PwshContextSettingsFilePath -Encoding utf8
+
+    Write-Host "Pwsh context configuration saved at: '$PwshContextSettingsFilePath'"
 }
