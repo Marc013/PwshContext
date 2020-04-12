@@ -9,7 +9,7 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-# RootModule = ''
+RootModule = 'PwshContext.psm1'
 
 # Version number of this module.
 ModuleVersion = '0.2.1'
@@ -42,7 +42,7 @@ PowerShellVersion = '7.0'
 # PowerShellHostVersion = ''
 
 # Minimum version of Microsoft .NET Framework required by this module. This prerequisite is valid for the PowerShell Desktop edition only.
-DotNetFrameworkVersion = '4.7.2'
+# DotNetFrameworkVersion = ''
 
 # Minimum version of the common language runtime (CLR) required by this module. This prerequisite is valid for the PowerShell Desktop edition only.
 # ClrVersion = ''
@@ -69,7 +69,7 @@ DotNetFrameworkVersion = '4.7.2'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Install-PwshModule', 'New-PwshContext', 'Set-PwshContext'
+FunctionsToExport = @( 'Install-PwshModule', 'New-PwshContext', 'Set-PwshContext' )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
@@ -87,7 +87,7 @@ AliasesToExport = @()
 # ModuleList = @()
 
 # List of all files packaged with this module
-# FileList = @()
+FileList = @('PwshContext.psd1', 'PwshContext.psm1')
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 PrivateData = @{
