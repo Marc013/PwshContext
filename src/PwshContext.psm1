@@ -266,18 +266,6 @@ function Get-ExistingModule {
 }
 
 function Install-PwshModule {
-    <#
-        .SYNOPSIS
-        Installs the PowerShell module in the specified directory.
-
-        .DESCRIPTION
-        Installs the PowerShell module and all dependencies in the specified directory.
-
-        .EXAMPLE
-        Install-PwshModule -Name 'Az' -Path 'C:\pwsh\modules1'
-
-        Installs PowerShell module Az and all dependencies in directory C:\pwsh\modules1.
-    #>
     [CmdletBinding()]
     param (
         [Parameter(
@@ -364,20 +352,6 @@ function Install-PwshModule {
 }
 
 function Set-PwshContext {
-    <#
-        .SYNOPSIS
-        Set PowerShell context
-
-        .DESCRIPTION
-        Set PowerShell context specified in the context configuration file or current loaded modules.
-        When no context configuration file is present a context directory structure will be created and a new context configuration file describing the current loaded modules (PowerShell build-in modules excluded).
-
-        .EXAMPLE
-        Set-PwshContext -Path C:\pwsh\DevEnv01
-
-        This command will load configuration file C:\pwsh\DevEnv01\Context\PwshContext_DevEnv01.json and configure a new PowerShell session with the described context.
-        When no configuration file is present it will trigger module 'New-PwshContext' creating a new PowerShell context configuration file.
-    #>
     [CmdletBinding()]
     param (
         [Parameter(
@@ -445,20 +419,6 @@ function Set-PwshContext {
 }
 
 function New-PwshContext {
-    <#
-        .SYNOPSIS
-        Create a new PowerShell context configuration file.
-
-        .DESCRIPTION
-        Create a new PowerShell context configuration file containing the current loaded PowerShell modules (PowerShell build-in modules excluded) and any PowerShell module that is present in directory 'Modules' in the context directory.
-        The file will be stored in directory Context at the specified path (which is created if not present).
-
-        .EXAMPLE
-        New-PwshContext -Path C:\pwsh\DevEnv01
-
-        Creates a new PowerShell configuration describing the current loaded PowerShell modules (PowerShell build-in modules excluded) and any PowerShell module that is present in directory 'Modules' in the context directory.
-        The PowerShell context configuration is saved at C:\pwsh\DevEnv01\Context\PwshContext_DevEnv01.json.
-    #>
     [CmdletBinding()]
     param (
         [Parameter(

@@ -1,0 +1,52 @@
+{
+  "powershell.scriptAnalysis.enable": true,
+  "powershell.helpCompletion": "BlockComment",
+  "powershell.scriptAnalysis.settingsPath": "./PSScriptAnalyzerSettings.psd1",
+  "editor.rulers": [
+    135
+  ],
+  "markdownlint.config": {
+    "MD007": {
+      "indent": 4
+    },
+    "MD013": {
+      "line_length": 135,
+      "tables": false,
+      "code_blocks": false
+    },
+    "MD025": false
+  },
+  "json.schemas": [
+    {
+      "fileMatch": [
+        "/Foundation/**/*.parameters.json"
+      ],
+      "url": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#"
+    },
+    {
+      "fileMatch": [
+        "/Foundation/Extensions/**/task.json"
+      ],
+      "url": "https://raw.githubusercontent.com/microsoft/azure-pipelines-task-lib/master/tasks.schema.json"
+    },
+    {
+      "fileMatch": [
+        "/Foundation/Extensions/**/vss-extension.json"
+      ],
+      "url": "http://json.schemastore.org/vss-extension"
+    }
+  ],
+  "yaml.schemaStore.enable": true,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "azure.cloud": "Azure",
+  "files.associations": {
+    "*.ps1xml": "xml"
+  },
+  "files.exclude": {
+    "**/node_modules/**": true
+  },
+  "search.exclude": {
+    "**/node_modules/**": true
+  }
+}
