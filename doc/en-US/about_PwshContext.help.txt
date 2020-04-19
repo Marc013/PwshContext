@@ -1,0 +1,8 @@
+TOPIC
+    about_PwshContext
+
+SHORT DESCRIPTION
+    Stuff module about PwshContext
+
+LONG DESCRIPTION
+    Even more stuff about PwshContext

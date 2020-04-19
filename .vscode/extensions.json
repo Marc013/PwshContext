@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    "ms-vscode.powershell",
+    "ms-azure-devops.azure-pipelines",
+    "editorconfig.editorconfig",
+    "eamodio.gitlens",
+    "redhat.vscode-yaml",
+    "davidanson.vscode-markdownlint",
+    "visualstudioexptteam.vscodeintellicode",
+    "simonguo.vscode-markdown-table-sort",
+    "yzhang.markdown-all-in-one"
+  ],
+  "unwantedRecommendations": [
+    "felipecaputo.git-project-manager",
+    "donjayamanne.githistory"
+  ]
+}
