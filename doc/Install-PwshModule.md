@@ -13,7 +13,7 @@ Installs the PowerShell module in the specified directory.
 
 ## SYNTAX
 
-```
+```text
 Install-PwshModule [-Name] <String> [-Condition] <String> [[-Version] <Version>] [-Path] <String>
  [<CommonParameters>]
 ```
@@ -26,7 +26,7 @@ Installs the PowerShell module and all dependencies in the specified directory.
 
 ### EXAMPLE 1
 
-```
+```text
 Install-PwshModule -Name 'Az' -Path 'C:\pwsh\modules1'
 ```
 
