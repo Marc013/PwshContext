@@ -8,25 +8,22 @@ schema: 2.0.0
 # Install-PwshModule
 
 ## SYNOPSIS
-
 Installs the PowerShell module in the specified directory.
 
 ## SYNTAX
 
-```text
+```
 Install-PwshModule [-Name] <String> [-Condition] <String> [[-Version] <Version>] [-Path] <String>
  [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-
 Installs the PowerShell module and all dependencies in the specified directory.
 
 ## EXAMPLES
 
 ### EXAMPLE 1
-
-```text
+```
 Install-PwshModule -Name 'Az' -Path 'C:\pwsh\modules1'
 ```
 
@@ -35,7 +32,6 @@ Installs PowerShell module Az and all dependencies in directory C:\pwsh\modules1
 ## PARAMETERS
 
 ### -Name
-
 PowerShell module name.
 
 ```yaml
@@ -51,7 +47,6 @@ Accept wildcard characters: False
 ```
 
 ### -Condition
-
 PowerShell module version condition.
 
 ```yaml
@@ -67,7 +62,6 @@ Accept wildcard characters: False
 ```
 
 ### -Version
-
 PowerShell module version.
 
 ```yaml
@@ -83,7 +77,6 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-
 Path to install the module.
 
 ```yaml
@@ -99,7 +92,6 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS

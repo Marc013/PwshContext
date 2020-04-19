@@ -1,3 +1,0 @@
-# PwshContext #
-
-Some nice description :-)
