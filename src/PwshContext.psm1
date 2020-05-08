@@ -107,12 +107,27 @@ function Get-PwshModuleData { # NEED TO HANDLE MINIMUMVERSION AND MAXIMUMVERSION
     )
 
     if ($RequiredVersion) {
-        Write-Verbose "Finding PowerShell module '$Name' with required version '$RequiredVersion'"
-        $Module = Find-Module -Name $Name -RequiredVersion $RequiredVersion -Tag PSEdition_Core -Verbose:$false -ErrorAction Stop
+        [string]$RequiredVersionMessage = "with required version '$RequiredVersion'"
+        [string]$VersionErrorMessage = "or version '$RequiredVersion' might not be present"
+        [hashtable]$FindModuleParameters = @{
+            RequiredVersion = $RequiredVersion
+        }
     }
-    else {
-        Write-Verbose "Finding PowerShell module '$Name'"
-        $Module = Find-Module -Name $Name -Tag PSEdition_Core -Verbose:$false -ErrorAction Stop
+
+    [hashtable]$FindModuleParameters += @{
+        Name        = $Name
+        Tag         = 'PSEdition_Core'
+        Verbose     = $false
+        ErrorAction = 'Stop'
+    }
+
+    Write-Verbose "Finding PowerShell module '$Name' $RequiredVersionMessage"
+
+    try {
+        $Module = Find-Module @FindModuleParameters
+    }
+    catch {
+        throw "Module '$Name' may not be compatible with pwsh core $VersionErrorMessage"
     }
 
     if ($Module) {
@@ -171,8 +186,9 @@ function Build-PwshModuleList {
     Write-Verbose "Iterating through module dependencies."
     foreach ($Dependency in $Dependencies) {
         Write-Verbose "Creating hash containing a hashtable per module with its version."
-        [string]$ModuleName = $Dependency.CanonicalId.Split('#').Split(':').split('/')[1]
-        [string]$ModuleVersion = $Dependency.CanonicalId.Split('#').Split(':').split('/').Trim('[').Trim(']')[2]
+        [array]$DependencyData = $Dependency.CanonicalId.Split('#').Split(':').split('/').Trim('[').Trim(']')
+        [string]$ModuleName = $DependencyData[1] #$Dependency.CanonicalId.Split('#').Split(':').split('/')[1]
+        [string]$ModuleVersion = $DependencyData[2] #$Dependency.CanonicalId.Split('#').Split(':').split('/').Trim('[').Trim(']')[2]
 
         [array]$Modules += @{
             Name    = $ModuleName
@@ -185,21 +201,21 @@ function Build-PwshModuleList {
     $Modules
 }
 
-function Get-ExistingModule {
+function Publish-ExistingModule {
     <#
         .SYNOPSIS
-        Copies or moves existing modules.
+        Copies or moves an existing module.
 
         .DESCRIPTION
-        Copies or moves existing modules to the specified path.
+        Copies or moves an existing module to the specified environment path.
 
         .EXAMPLE
-        Get-ExistingModule -Name Az.Accounts -Version 1.7.4 -EnvironmentPath \tmp\DevEnv01
+        Publish-ExistingModule -Name Az.Accounts -Version 1.7.4 -EnvironmentPath \tmp\DevEnv01
 
         This command copies module Az.Accounts version 1.7.4 to directory \tmp\DevEnv01.
 
         .EXAMPLE
-        Get-ExistingModule -Name Az.Accounts -Version 1.7.4 -EnvironmentPath C:\tmp\DevEnv01 -Move
+        Publish-ExistingModule -Name Az.Accounts -Version 1.7.4 -EnvironmentPath C:\tmp\DevEnv01 -Move
 
         This command moves module Az.Accounts version 1.7.4 to directory C:\temp\DevEnv01.
     #>
@@ -225,15 +241,23 @@ function Get-ExistingModule {
 
     [char]$Separator = [System.IO.Path]::DirectorySeparatorChar
     [string]$EnvironmentPath = $EnvironmentPath.TrimEnd($Separator)
+    [string]$GetModuleMessage = "Obtaining module '$Name' for copy when present"
 
     if($Move){
-        Write-Verbose "Locating module '$Name' for move."
-        $ExistingModules = Get-Module -Name $Name -ListAvailable -Verbose:$false -ErrorAction Stop
+        [string]$GetModuleMessage = "Locating module '$Name' for move"
+        [hashtable]$GetModuleParameters = @{
+            Name = $Name
+        }
     }
-    else {
-        Write-Verbose "Obtaining module '$Name' for copy when present."
-        $ExistingModules = Get-Module -ListAvailable -Verbose:$false -ErrorAction Stop
+
+    [hashtable]$GetModuleParameters += @{
+        ListAvailable = $true
+        Verbose       = $false
+        ErrorAction   = 'Stop'
     }
+
+    Write-Verbose $GetModuleMessage
+    $ExistingModules = Get-Module @GetModuleParameters
 
     $ModuleVersionNew = "$Name-$Version"
 
@@ -261,6 +285,7 @@ function Get-ExistingModule {
             return $true
         }
     }
+    Write-Verbose "Module '$Name' with version '$Version' not found on the system"
     Write-Verbose "Returning: False"
     $false
 }
@@ -287,7 +312,7 @@ function Install-PwshModule {
         [string]$Path
     )
     [char]$Separator = [System.IO.Path]::DirectorySeparatorChar
-    $Path = "$Path$($Separator)Modules"
+    [string]$Path = "$Path$($Separator)Modules"
 
     Write-Verbose "Triggering function 'New-Directory' to create path '$Path'."
     $EnvironmentPath = New-Directory -Path $Path -ErrorAction Stop
@@ -307,17 +332,19 @@ function Install-PwshModule {
 
         Write-Verbose "Validating if module is already present at path '$ModulePath'."
         If (-not $(Test-Path -Path $ModulePath -ErrorAction Stop)) {
-            Write-Verbose "Triggering module 'Get-ExistingModule' for copying module $ModuleName with version $ModuleVersion when present."
-            $CopyResult = Get-ExistingModule -Name $ModuleName -Version $ModuleVersion -EnvironmentPath $EnvironmentPath -ErrorAction Stop
+            Write-Verbose "Triggering module 'Publish-ExistingModule' for copying module '$ModuleName' with version '$ModuleVersion' when present."
+            $CopyResult = Publish-ExistingModule -Name $ModuleName -Version $ModuleVersion -EnvironmentPath $EnvironmentPath -ErrorAction Stop
 
             switch ($CopyResult) {
                 True { continue }
                 False {
+                    Write-Verbose "Module '$ModuleName' with version '$ModuleVersion' is not present on the system."
+
                     if($Null -eq $Condition){
                         [string]$Condition = 'RequiredVersion'
                     }
 
-                    Write-Verbose "Installing module $ModuleName with version $ModuleVersion."
+                    Write-Verbose "Installing module '$ModuleName' with version '$ModuleVersion'."
                     $InstallModuleParameters = @{
                         Name               = $ModuleName
                         $Condition         = $ModuleVersion
@@ -333,14 +360,14 @@ function Install-PwshModule {
 
                     if ([string]::IsNullOrEmpty($ModuleInstall) -or $ModuleInstall.Version -ne $Version) {
                         $ModuleVersion = (Get-Module -Name $ModuleName -ListAvailable -Verbose:$false)[0].Version
-                        Write-Verbose "Module with version '$ModuleVersion' is already present and will be copied as you specified condition '$Condition'."
+                        Write-Verbose "Module '$ModuleName' with version '$ModuleVersion' is already present and will be copied as you specified condition '$Condition'."
 
-                        Write-Verbose "Triggering function 'Get-ExistingModule' for copying module $ModuleName with version $ModuleVersion."
-                        Get-ExistingModule -Name $ModuleName -Version $ModuleVersion -EnvironmentPath $EnvironmentPath -ErrorAction Stop | Out-Null
+                        Write-Verbose "Triggering function 'Publish-ExistingModule' for copying module $ModuleName with version $ModuleVersion."
+                        Publish-ExistingModule -Name $ModuleName -Version $ModuleVersion -EnvironmentPath $EnvironmentPath -ErrorAction Stop | Out-Null
                     }
                     else {
-                        Write-Verbose "Triggering function 'Get-ExistingModule' for moving module $ModuleName with version $ModuleVersion."
-                        Get-ExistingModule -Name $ModuleName -Version $ModuleVersion -EnvironmentPath $EnvironmentPath -Move -ErrorAction Stop | Out-Null
+                        Write-Verbose "Triggering function 'Publish-ExistingModule' for moving module $ModuleName with version $ModuleVersion."
+                        Publish-ExistingModule -Name $ModuleName -Version $ModuleVersion -EnvironmentPath $EnvironmentPath -Move -ErrorAction Stop | Out-Null
                     }
                 }
             }
@@ -372,16 +399,16 @@ function Set-PwshContext {
     $EnvPath = New-Directory -Path $ModulesPath
 
     Write-Verbose "When present, reading PowerShell context configuration: '$PwshContextJsonPath'"
-    $PwshContextJson = Get-Content -Path $PwshContextJsonPath -Raw -ErrorAction SilentlyContinue
+    [string]$PwshContextJson = Get-Content -Path $PwshContextJsonPath -Raw -ErrorAction SilentlyContinue
     if ($PwshContextJson) {
-        $PwshContext =$PwshContextJson | ConvertFrom-Json -Depth 5
-        $Modules = $PwshContext.modules
+        [psobject]$PwshContext =$PwshContextJson | ConvertFrom-Json -Depth 5
+        [array]$Modules = $PwshContext.modules
         [string]$Name = $PwshContext.name
 
         Write-Verbose "Installing PowerShell modules specified in the PowerShell context configuration"
         foreach ($Module in $Modules) {
             Write-Verbose "Installing PowerShell module '$($Module.Name)' with version '$($Module.Version)' and condition '$($Module.condition)'"
-            $PwshModuleParameters = @{
+            [hashtable]$PwshModuleParameters = @{
                 Name        = $Module.Name
                 Version     = $Module.Version
                 Condition   = $Module.condition
@@ -505,5 +532,5 @@ function New-PwshContext {
     Write-Verbose "Saving PowerShell context settings: '$PwshContextSettingsFilePath'"
     $PwshContextSettingsJson | Out-File -LiteralPath $PwshContextSettingsFilePath -Encoding utf8
 
-    Write-Host "Pwsh context configuration saved at: '$PwshContextSettingsFilePath'"
+    Write-Host "Pwsh context configuration saved at: '$PwshContextSettingsFilePath'" -ForegroundColor Green
 }
