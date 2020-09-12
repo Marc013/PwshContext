@@ -39,7 +39,7 @@
   "yaml.schemaStore.enable": true,
   "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 1000,
-  "azure.cloud": "Azure",
+  "azure.cloud": "AzureCloud",
   "files.associations": {
     "*.ps1xml": "xml"
   },
